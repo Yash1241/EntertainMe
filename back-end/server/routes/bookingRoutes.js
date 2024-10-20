@@ -1,5 +1,5 @@
 const express = require('express');
-const Booking = require('./models/Booking'); // Adjust the path as needed
+const Booking = require('../models/Booking'); // Adjust the path as needed
 const router = express.Router();
 
 // Middleware for authentication (if needed)

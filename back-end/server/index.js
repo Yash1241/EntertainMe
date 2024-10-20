@@ -2,20 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('./models/User'); // Adjust the path as needed
-const Event = require('./models/Event'); // Adjust the path as needed
-const Booking = require('./models/Booking'); // Adjust the path as needed
-const userRoutes = require('./userRoutes'); // Import user routes
-const itemRoutes = require('./itemRoutes'); // Import item routes
-const bookingRoutes = require('./bookingRoutes'); // Import booking routes
+const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
 
-dotenv.config(); // Load environment variables from .env file
+const User = require('./models/User'); // User model
+const Event = require('./models/Event'); // Event model
+const Booking = require('./models/Booking'); // Booking model
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -25,7 +25,20 @@ mongoose.connect(process.env.MONGODB_URI, {
     useUnifiedTopology: true,
 })
 .then(() => console.log('MongoDB connected'))
-.catch(err => console.error(err));
+.catch(err => console.error('MongoDB connection error:', err));
+
+// User Login Route
+app.post('/api/users/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).send('User not found.');
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).send('Invalid credentials.');
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+});
 
 // Authentication Middleware
 const auth = (req, res, next) => {
@@ -41,12 +54,7 @@ const auth = (req, res, next) => {
     }
 };
 
-// Routes
-app.use('/api/users', userRoutes); // Use user routes
-app.use('/api/items', itemRoutes); // Use item routes
-app.use('/api/bookings', bookingRoutes); // Use booking routes
-
-// Event Routes
+// Protected Event Creation Route
 app.post('/api/events', auth, async (req, res) => {
     const { title, date, category, description, price } = req.body;
     const newEvent = new Event({ title, date, category, description, price });
@@ -55,21 +63,31 @@ app.post('/api/events', auth, async (req, res) => {
         await newEvent.save();
         res.status(201).json(newEvent);
     } catch (error) {
-        res.status(500).send('Error creating event');
+        res.status(500).send('Error creating event: ' + error.message);
     }
 });
 
-// More Event CRUD routes go here...
+// Import Routes
+const userRoutes = require('./routes/userRoutes'); // Ensure this path is correct
+const itemRoutes = require('./routes/itemRoutes'); // Ensure this path is correct
+const bookingRoutes = require('./routes/bookingRoutes'); // Ensure this path is correct
+const eventRoutes = require('./routes/event'); // Ensure this path is correct
+
+// Use Routes
+app.use('/api/users', userRoutes); // User routes
+app.use('/api/items', itemRoutes); // Item routes
+app.use('/api/bookings', bookingRoutes); // Booking routes
+app.use('/api/events', eventRoutes); // Event routes
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.send('Welcome to Entertain Me API');
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
-});
-
-// Root endpoint
-app.get('/', (req, res) => {
-    res.send('Welcome to Entertain Me API');
 });
 
 // Start the server

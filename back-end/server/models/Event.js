@@ -23,5 +23,6 @@ const eventSchema = new mongoose.Schema({
     },
 });
 
+// Export the Event model
 const Event = mongoose.model('Event', eventSchema);
 module.exports = Event;

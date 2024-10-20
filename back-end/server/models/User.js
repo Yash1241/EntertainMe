@@ -14,8 +14,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    // Add other fields as needed, e.g., role for admin functionality
 });
 
 const User = mongoose.model('User', userSchema);
+
 module.exports = User;
