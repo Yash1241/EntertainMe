@@ -7,8 +7,36 @@ const Registration = () => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
 
+    const token = localStorage.getItem('token');
+    if (token) {
+        window.location.href = '/events'; // Redirect logged-in users to events page
+        return null;
+    }
+
+    // Email validation function
+    const validateEmail = (email) => {
+        const re = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+        return re.test(String(email).toLowerCase());
+    };
+
+    // Optional: Password validation for strength (at least 6 characters)
+    const validatePassword = (password) => {
+        return password.length >= 6;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateEmail(email)) {
+            setMessage('Invalid email format.');
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            setMessage('Password should be at least 6 characters long.');
+            return;
+        }
+
         try {
             await axios.post('http://localhost:5000/api/users/register', {
                 name,

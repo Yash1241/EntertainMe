@@ -1,22 +1,43 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // Updated import
+import { useUser } from './UserContext'; 
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const { setUser } = useUser();
+    const token = localStorage.getItem('token');
+
+    if (token) {
+        const decoded = jwtDecode(token); // Update function call
+        setUser(decoded);
+        window.location.href = '/events';
+        return null;
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            const response = await axios.post('http://localhost:5002/api/users/login', {
+            const response = await axios.post('http://localhost:5000/api/users/login', {
                 email,
                 password,
             });
+            const token = response.data.token;
+            localStorage.setItem('token', token);
+
+            const decoded = jwtDecode(token); // Update function call
+            setUser(decoded);
             setMessage('Login successful!');
-            localStorage.setItem('token', response.data.token); // Store token in local storage
+            window.location.href = '/events';
         } catch (error) {
             setMessage('Error logging in: ' + (error.response?.data || 'Unknown error'));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -38,7 +59,9 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
-                <button type="submit">Login</button>
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Logging in...' : 'Login'}
+                </button>
             </form>
             {message && <p>{message}</p>}
         </div>

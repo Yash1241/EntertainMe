@@ -1,85 +1,64 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 
 const EventCreator = () => {
-    const [title, setTitle] = useState('');
-    const [date, setDate] = useState('');
-    const [category, setCategory] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState('');
-    const [message, setMessage] = useState('');
+  const [eventData, setEventData] = useState({
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    description: '',
+    price: '',
+  });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const token = localStorage.getItem('token');
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEventData({ ...eventData, [name]: value });
+  };
 
-        try {
-            const response = await axios.post('http://localhost:5000/api/events', {
-                title,
-                date,
-                category,
-                description,
-                price
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-            setMessage('Event created successfully!');
-            // Clear the form after submission
-            setTitle('');
-            setDate('');
-            setCategory('');
-            setDescription('');
-            setPrice('');
-        } catch (error) {
-            setMessage('Error creating event');
-        }
-    };
+    // Validate price
+    if (eventData.price <= 0) {
+      alert('Price must be a positive number.');
+      return;
+    }
 
-    return (
-        <div>
-            <h2>Create Event</h2>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Event Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                />
-                <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                />
-                <input
-                    type="text"
-                    placeholder="Category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    required
-                />
-                <textarea
-                    placeholder="Description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                ></textarea>
-                <input
-                    type="number"
-                    placeholder="Price"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                />
-                <button type="submit">Create Event</button>
-            </form>
-            {message && <p>{message}</p>}
-        </div>
-    );
+    const response = await fetch('http://localhost:5000/api/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
+    });
+
+    if (response.ok) {
+      alert('Event created successfully!');
+      setEventData({
+        title: '',
+        date: '',
+        time: '',
+        location: '',
+        description: '',
+        price: '',
+      });
+    } else {
+      const errorData = await response.json();
+      alert(`Error creating event: ${errorData.msg || 'Unknown error'}`);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="title" value={eventData.title} onChange={handleChange} placeholder="Event Title" required />
+      <input type="date" name="date" value={eventData.date} onChange={handleChange} required />
+      <input type="time" name="time" value={eventData.time} onChange={handleChange} required />
+      <input type="text" name="location" value={eventData.location} onChange={handleChange} placeholder="Location" required />
+      <textarea name="description" value={eventData.description} onChange={handleChange} placeholder="Description" required />
+      <input type="number" name="price" value={eventData.price} onChange={handleChange} placeholder="Price" required />
+      <button type="submit">Create Event</button>
+    </form>
+  );
 };
 
 export default EventCreator;

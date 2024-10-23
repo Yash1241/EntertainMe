@@ -5,17 +5,24 @@ const auth = require('../middleware/auth'); // Ensure you have an auth middlewar
 
 // Create a new event
 router.post('/', auth, async (req, res) => {
-    const { title, date, category, description, price } = req.body;
-    const newEvent = new Event({ title, date, category, description, price });
+    const { name, description, date, price, location } = req.body;
 
     try {
-        await newEvent.save();
-        res.status(201).json(newEvent);
+      // Create a new event document
+      const newEvent = new Event({
+        name,
+        description,
+        date,
+        price,
+        location
+      });
+
+      await newEvent.save();
+      res.status(201).json(newEvent);
     } catch (error) {
-        res.status(500).send('Error creating event');
+      res.status(500).send('Error creating event');
     }
 });
-
 // Get all events
 router.get('/', async (req, res) => {
     try {

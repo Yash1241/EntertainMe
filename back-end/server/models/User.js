@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    date: {
+        type: Date,
+        default: Date.now, // Store the registration date
+    }
 });
 
 const User = mongoose.model('User', userSchema);

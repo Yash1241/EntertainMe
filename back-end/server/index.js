@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -78,7 +79,7 @@ app.use('/api/users', userRoutes); // User routes
 app.use('/api/items', itemRoutes); // Item routes
 app.use('/api/bookings', bookingRoutes); // Booking routes
 app.use('/api/events', eventRoutes); // Event routes
-
+app.use(cors({ origin: 'http://localhost:3000' }));
 // Root endpoint
 app.get('/', (req, res) => {
     res.send('Welcome to Entertain Me API');
